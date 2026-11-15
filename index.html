@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F8C8DC">
+<title>رحلة صغيرة لآية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   رحلة صغيرة لآية — الهوية البصرية
+   ============================================================ */
+:root{
+  --pink:#F8C8DC;
+  --pink-light:#FCE4EC;
+  --warm-white:#FFF9FC;
+  --gold:#D6B36A;
+  --gold-deep:#B8944F;
+  --ink:#493744;
+  --ink-soft:#7A6472;
+  --shadow:0 18px 50px rgba(73,55,68,.14);
+  --ff-ui:'Tajawal','Noto Sans Arabic','Segoe UI',Tahoma,Arial,sans-serif;
+  --ff-display:'Aref Ruqaa','Amiri','Noto Naskh Arabic','Traditional Arabic',serif;
+  --ff-letter:'Amiri','Noto Naskh Arabic','Traditional Arabic',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;letter-spacing:0}
+[hidden]{display:none !important}
+body{
+  font-family:var(--ff-ui);
+  font-size:16px;line-height:1.7;
+  background:var(--warm-white);
+  color:var(--ink);
+  overflow-x:hidden;
+  min-height:100vh;min-height:100dvh;
+}
+body.sheet-open{overflow:hidden}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit;touch-action:manipulation}
+img{max-width:100%;display:block}
+.instant,.instant *{transition:none !important;animation:none !important}
+
+/* ---------- الخلفية ---------- */
+.bg-layer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(248,200,220,.55), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, rgba(214,179,106,.18), transparent 60%),
+    var(--warm-white);
+}
+.bg-hearts{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.float-heart{position:absolute;bottom:-40px;opacity:.35;animation:floatUp linear infinite;will-change:transform}
+body.paused .float-heart{animation-play-state:paused}
+@keyframes floatUp{
+  0%{transform:translateY(0) rotate(0deg);opacity:0}
+  10%{opacity:.35}
+  90%{opacity:.3}
+  100%{transform:translateY(-110vh) rotate(35deg);opacity:0}
+}
+
+/* ---------- إطار التطبيق ---------- */
+#app{position:relative;z-index:2;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.screen{
+  display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  padding:64px 22px 100px;width:100%;max-width:560px;margin:0 auto;
+  animation:screenIn .7s cubic-bezier(.22,1,.36,1) both;
+}
+.screen.active{display:flex}
+@keyframes screenIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+/* ---------- شريط التقدّم ---------- */
+#progress{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:center;gap:12px;
+  padding:calc(14px + env(safe-area-inset-top)) 12px 24px;
+  background:linear-gradient(rgba(255,249,252,.94),rgba(255,249,252,0));
+  opacity:0;pointer-events:none;transition:opacity .5s;
+}
+#progress.show{opacity:1}
+.pdot{
+  width:12px;height:12px;border-radius:50%;
+  background:#EBD4E0;border:1.5px solid transparent;
+  transition:all .5s cubic-bezier(.34,1.56,.64,1);position:relative;
+}
+.pdot.done{background:var(--gold);border-color:var(--gold-deep);transform:scale(.85)}
+.pdot.now{background:var(--pink);border-color:#E8A6C2;transform:scale(1.3);box-shadow:0 0 0 6px rgba(248,200,220,.25)}
+.pdot .tip{
+  position:absolute;top:19px;left:50%;transform:translateX(-50%);
+  font-size:.74rem;font-weight:500;color:var(--ink-soft);white-space:nowrap;
+  opacity:0;transition:opacity .3s;
+}
+.pdot.now .tip{opacity:1}
+
+/* ---------- عدّاد النجوم ---------- */
+#starHud{
+  position:fixed;top:calc(8px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:55;
+  display:flex;align-items:center;gap:5px;padding:4px 10px 4px 12px;border-radius:999px;
+  background:rgba(255,255,255,.88);box-shadow:0 4px 14px rgba(73,55,68,.1);
+  font-weight:700;font-size:.95rem;color:var(--ink);
+  opacity:0;pointer-events:none;transition:opacity .4s;
+}
+#starHud.show{opacity:1}
+#starHud svg{width:18px;height:18px;fill:var(--gold);stroke:var(--gold-deep);stroke-width:1.2;stroke-linejoin:round}
+#starHud.bump{animation:hudBump .5s ease}
+@keyframes hudBump{0%,100%{transform:scale(1)}40%{transform:scale(1.22)}}
+
+/* ---------- زر الصوت ---------- */
+#soundBtn{
+  position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:calc(16px + env(safe-area-inset-left));z-index:60;
+  width:46px;height:46px;border-radius:50%;
+  background:#fff;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s;
+}
+#soundBtn:active{transform:scale(.9)}
+#soundBtn svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#soundBtn .off-line{display:none}
+#soundBtn.muted .off-line{display:block}
+#soundBtn.muted .wave{display:none}
+
+/* ---------- الخطوط ---------- */
+.script{font-family:var(--ff-display);font-weight:400}
+.stage-eyebrow{font-size:.9rem;color:var(--gold-deep);margin-bottom:6px;font-weight:700}
+.stage-title{font-family:var(--ff-display);font-weight:700;font-size:clamp(1.7rem,7vw,2.3rem);text-align:center;line-height:1.55;margin-bottom:6px}
+.stage-sub{color:var(--ink-soft);text-align:center;font-size:1.02rem;max-width:34ch;margin-bottom:24px;line-height:1.9}
+
+/* ---------- الأزرار ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:13px 32px;border-radius:999px;
+  background:linear-gradient(135deg,#F8C8DC,#F2AEC8);
+  color:var(--ink);font-weight:700;font-size:1.05rem;
+  box-shadow:0 10px 28px rgba(232,166,194,.45);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,opacity .3s;
+  position:relative;overflow:hidden;min-height:52px;
+}
+.btn .ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);
+  transform:translateX(120%);transition:transform .7s;
+}
+@media (hover:hover){.btn:hover::after{transform:translateX(-120%)}}
+.btn:active{transform:scale(.95)}
+.btn.ghost{background:#fff;box-shadow:var(--shadow);color:var(--ink-soft)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:24px}
+.hint-btn{
+  font-size:.95rem;color:var(--gold-deep);font-weight:700;
+  border-bottom:1px dashed var(--gold);padding:6px 2px 2px;margin-top:14px;min-height:40px;
+}
+
+/* ---------- النجوم القابلة للجمع ---------- */
+.star-row{display:flex;justify-content:center;margin-top:8px}
+.star-pick{
+  width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;
+  animation:twinkle 2.6s ease-in-out infinite;
+}
+.star-pick svg{width:28px;height:28px;fill:var(--gold);stroke:var(--gold-deep);stroke-width:1.2;stroke-linejoin:round;filter:drop-shadow(0 3px 6px rgba(184,148,79,.45))}
+.star-pick.got{animation:starGot .6s ease-in forwards;pointer-events:none}
+@keyframes twinkle{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.15);opacity:1}}
+@keyframes starGot{to{transform:translateY(-44px) scale(1.7);opacity:0}}
+
+/* ---------- القلب السرّي ---------- */
+.secret-heart{
+  position:absolute;top:78px;left:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  opacity:.45;animation:softPulse 3s ease-in-out infinite;
+}
+.secret-heart svg{width:22px;height:22px;fill:#F3A9C6}
+.secret-heart:active{transform:scale(.85)}
+@keyframes softPulse{0%,100%{opacity:.3;transform:scale(.95)}50%{opacity:.75;transform:scale(1.08)}}
+
+/* ============================================================
+   شاشة البداية
+   ============================================================ */
+#screen-start .ornament{width:min(280px,70vw);margin:4px auto 18px;filter:drop-shadow(0 22px 30px rgba(73,55,68,.16));animation:sway 5s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
+.start-title{font-size:clamp(2.8rem,13vw,4.2rem);line-height:1.5;color:var(--ink);text-align:center}
+.start-line{width:120px;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:6px auto 14px}
+.start-sub{color:var(--ink-soft);text-align:center;font-size:1.05rem;max-width:30ch;line-height:1.9;margin-bottom:10px}
+.sealed-tag{display:inline-flex;align-items:center;gap:10px;margin-bottom:6px;font-size:.92rem;font-weight:700;color:var(--gold-deep)}
+.sealed-tag::before,.sealed-tag::after{content:'';width:26px;height:1px;background:var(--gold)}
+
+/* ============================================================
+   المرحلة ١ — الرسالة السرّية
+   ============================================================ */
+.env-scene{perspective:1000px;width:min(320px,80vw);margin:6px auto 8px;transition:margin-top .6s ease}
+.env-scene.open{margin-top:70px}
+.envelope{position:relative;width:100%;aspect-ratio:1.42;cursor:pointer;transform-style:preserve-3d;transition:transform .4s;touch-action:manipulation}
+.envelope:not(.open):active{transform:scale(.97)}
+.envelope.open{cursor:default;pointer-events:none}
+.env-back{position:absolute;inset:0;border-radius:10px;background:linear-gradient(160deg,#F3B9CE,#EBA7C2);box-shadow:var(--shadow)}
+.env-letter{
+  position:absolute;left:6%;right:6%;top:8%;bottom:14%;
+  background:#FFFDF8;border-radius:6px;box-shadow:0 4px 14px rgba(73,55,68,.12);
+  transition:transform 1s cubic-bezier(.22,1,.36,1) .55s;
+  display:flex;align-items:center;justify-content:center;padding:18px;z-index:1;
+}
+.env-letter .script{font-size:clamp(1.5rem,6vw,2rem);color:var(--gold-deep);opacity:0;transition:opacity .8s .4s}
+.env-side{position:absolute;top:0;bottom:0;width:52%;background:linear-gradient(180deg,#F8C8DC,#F0B1C9);z-index:2}
+.env-side.left{left:0;clip-path:polygon(0 0,100% 50%,0 100%);border-radius:10px 0 0 10px}
+.env-side.right{right:0;clip-path:polygon(100% 0,0 50%,100% 100%);border-radius:0 10px 10px 0}
+.env-bottom{position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(180deg,#FBD0E0,#F4BACF);clip-path:polygon(0 100%,0 12%,50% 72%,100% 12%,100% 100%);z-index:3;border-radius:0 0 10px 10px}
+.env-flap{
+  position:absolute;left:0;right:0;top:0;height:52%;z-index:4;
+  background:linear-gradient(180deg,#F2AEC8,#E995B4);clip-path:polygon(0 0,100% 0,50% 100%);
+  transform-origin:top center;transition:transform .8s cubic-bezier(.4,0,.2,1) .15s;
+  border-radius:10px 10px 0 0;display:flex;align-items:flex-start;justify-content:center;
+}
+.env-seal{
+  width:56px;height:56px;border-radius:50%;margin-top:26%;
+  background:radial-gradient(circle at 32% 30%,#E3C98F,var(--gold) 55%,#A9853F);
+  box-shadow:0 4px 10px rgba(0,0,0,.22), inset 0 0 0 5px rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;transition:opacity .4s,transform .5s;
+}
+.env-seal .script{font-size:1.7rem;line-height:1;color:#5C4520;text-shadow:0 1px 0 rgba(255,255,255,.35);padding-top:6px}
+.envelope.open .env-flap{transform:rotateX(-178deg);z-index:1}
+.envelope.open .env-seal{opacity:0;transform:scale(.4)}
+.envelope.open .env-letter{transform:translateY(-46%) scale(1.04);z-index:5}
+.envelope.open .env-letter .script{opacity:1}
+.tap-note{font-size:.95rem;font-weight:500;color:var(--ink-soft);margin-top:4px;animation:pulseNote 2s ease-in-out infinite}
+@keyframes pulseNote{0%,100%{opacity:.45}50%{opacity:1}}
+
+.letter-card{
+  width:100%;max-width:460px;background:#FFFDF8;border-radius:18px;
+  box-shadow:var(--shadow);padding:34px 26px 26px;position:relative;margin-top:18px;
+  border:1px solid rgba(214,179,106,.35);animation:letterIn .8s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes letterIn{from{opacity:0;transform:translateY(40px) rotate(-1.5deg)}to{opacity:1;transform:none}}
+.letter-card::before,.letter-card::after{content:'';position:absolute;width:38px;height:38px;border:1.5px solid var(--gold);opacity:.5}
+.letter-card::before{top:10px;left:10px;border-right:none;border-bottom:none;border-radius:14px 0 0 0}
+.letter-card::after{bottom:10px;right:10px;border-left:none;border-top:none;border-radius:0 0 14px 0}
+.letter-body{font-family:var(--ff-letter);font-size:1.35rem;line-height:2;color:var(--ink);text-align:center}
+
+/* ============================================================
+   المرحلة ٢ — القلوب المتشابهة
+   ============================================================ */
+#game-board{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:400px;margin:0 auto}
+.mcard{aspect-ratio:1;perspective:700px;cursor:pointer;border-radius:14px;touch-action:manipulation}
+.mcard-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.34,1.2,.64,1)}
+.mcard.flipped .mcard-inner{transform:rotateY(180deg)}
+.mface{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mface.back{background:linear-gradient(145deg,#FBD3E2,#F3B4CC);border:1.5px solid rgba(255,255,255,.7);box-shadow:0 6px 16px rgba(232,166,194,.3)}
+.mface.back svg{width:42%;height:42%;opacity:.85}
+.mface.front{background:#fff;transform:rotateY(180deg);border:1.5px solid rgba(214,179,106,.4);box-shadow:0 6px 16px rgba(73,55,68,.1)}
+.mface.front svg{width:56%;height:56%}
+.mcard.matched{cursor:default}
+.mcard.matched .mcard-inner{animation:matchPop .6s cubic-bezier(.34,1.56,.64,1)}
+.mcard.matched .mface.front{border-color:var(--gold);background:#FFFBEF}
+.mcard.shake .mcard-inner{animation:noShake .4s}
+.mcard.hinted .mface.back{animation:hintPulse .8s ease-in-out 2}
+@keyframes matchPop{0%{transform:rotateY(180deg) scale(1)}45%{transform:rotateY(180deg) scale(1.14)}100%{transform:rotateY(180deg) scale(1)}}
+@keyframes noShake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-6px)}75%{transform:rotateY(180deg) translateX(6px)}}
+@keyframes hintPulse{0%,100%{box-shadow:0 6px 16px rgba(232,166,194,.3)}50%{box-shadow:0 0 0 4px rgba(214,179,106,.95),0 0 22px rgba(214,179,106,.8)}}
+.game-stats{display:flex;gap:26px;justify-content:center;margin:12px 0 14px;font-size:.98rem;color:var(--ink-soft);font-weight:500}
+.game-stats b{color:var(--ink);font-size:1.1rem;font-variant-numeric:tabular-nums}
+#match-win{animation:letterIn .7s both;text-align:center;margin-top:16px}
+#match-win .script{font-size:1.9rem;line-height:1.7;color:var(--gold-deep)}
+
+/* ============================================================
+   المرحلة ٣ — اختاري مفاجأتك
+   ============================================================ */
+#gift-row{display:flex;gap:16px;justify-content:center;align-items:flex-end;width:100%;max-width:440px;margin:10px auto}
+.gift-box{
+  flex:1;max-width:128px;min-width:0;padding:0;cursor:pointer;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s,filter .3s;
+  filter:drop-shadow(0 14px 22px rgba(73,55,68,.16));
+}
+@media (hover:hover){.gift-box:not(.selected):hover{transform:translateY(-8px)}}
+.gift-box:active{transform:scale(.93)}
+.gift-box.dim{opacity:.55;transform:scale(.94)}
+.gift-box.selected{transform:translateY(-6px);filter:drop-shadow(0 0 14px rgba(214,179,106,.8)) drop-shadow(0 14px 22px rgba(73,55,68,.16))}
+.gift-box.chosen{animation:chosenWiggle .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes chosenWiggle{0%{transform:scale(1)}30%{transform:scale(1.12) rotate(-4deg)}60%{transform:scale(1.06) rotate(3deg)}100%{transform:translateY(-6px)}}
+.gift-box svg{width:100%;height:auto;display:block}
+#gift-reveal{
+  width:100%;max-width:430px;margin:24px auto 0;text-align:center;
+  background:#fff;border-radius:20px;border:1px solid rgba(214,179,106,.35);
+  box-shadow:var(--shadow);padding:30px 22px;display:none;
+}
+#gift-reveal.show{display:block;animation:letterIn .7s both}
+#gift-reveal .reward-emoji{font-size:2.6rem;line-height:1.3;margin-bottom:6px}
+#gift-reveal h3{font-family:var(--ff-display);font-size:1.6rem;font-weight:700;line-height:1.6;margin-bottom:6px}
+#gift-reveal p{color:var(--ink-soft);font-size:1.05rem;line-height:1.95}
+
+/* ============================================================
+   المرحلة ٤ — أكملي القلب
+   ============================================================ */
+#puzzle-area{position:relative;width:100%;max-width:380px;margin:0 auto}
+#puzzle-slots{position:relative;z-index:1;width:62vw;width:min(230px,62vw,34vh);margin:0 auto}
+#puzzle-slots svg{width:100%;height:auto;display:block}
+.piece-tray{
+  position:relative;margin-top:16px;border-radius:18px;height:120px;
+  background:rgba(252,228,236,.55);border:1.5px dashed rgba(214,179,106,.5);transition:opacity .5s;
+}
+#puzzle-area.complete .piece-tray{opacity:0;height:0 !important;margin-top:0;border-width:0;transition:opacity .5s,height .5s,margin .5s}
+.tray-hint{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:.82rem;font-weight:500;color:var(--gold-deep);pointer-events:none;opacity:.8}
+.ppiece{
+  position:absolute;cursor:grab;z-index:5;filter:drop-shadow(0 6px 10px rgba(73,55,68,.25));
+  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+}
+.ppiece svg{width:100%;height:100%;display:block;pointer-events:none}
+.ppiece.animating{transition:left .45s cubic-bezier(.22,1,.36,1),top .45s cubic-bezier(.22,1,.36,1),width .45s cubic-bezier(.22,1,.36,1),height .45s cubic-bezier(.22,1,.36,1)}
+.ppiece.dragging{cursor:grabbing;z-index:20;transform:scale(1.1);filter:drop-shadow(0 12px 16px rgba(73,55,68,.3))}
+.ppiece.selected{outline:2.5px solid var(--gold);outline-offset:3px;border-radius:8px;animation:pulseNote 1.4s infinite}
+.ppiece.placed{cursor:default;filter:none;z-index:2;pointer-events:none}
+.ppiece.beat{animation:heartbeat 1.4s ease-in-out infinite}
+#heart-done{display:none;text-align:center;margin-top:18px}
+#heart-done.show{display:block;animation:letterIn .7s both}
+#heart-done .script{font-size:1.9rem;line-height:1.7;color:var(--gold-deep)}
+@keyframes heartbeat{0%,100%{transform:scale(1)}12%{transform:scale(1.1)}24%{transform:scale(1)}36%{transform:scale(1.07)}48%{transform:scale(1)}}
+
+/* ============================================================
+   المرحلة ٥ — الهدية الأخيرة
+   ============================================================ */
+#final-scene{text-align:center;width:100%;max-width:480px}
+#tap-count{display:inline-flex;gap:8px;align-items:center;justify-content:center;margin:6px 0 20px;transition:opacity .4s}
+.tap-dot{width:14px;height:14px;border-radius:50%;background:#EBD4E0;transition:all .4s cubic-bezier(.34,1.56,.64,1);border:1.5px solid transparent}
+.tap-dot.on{background:var(--gold);border-color:var(--gold-deep);transform:scale(1.15)}
+.gift3d-scene{display:flex;justify-content:center;margin:26px 0 4px}
+.gift3d{position:relative;width:min(220px,56vw);aspect-ratio:1;cursor:pointer;touch-action:manipulation}
+.g3d-lid{
+  position:absolute;left:-6%;right:-6%;top:0;height:34%;
+  background:linear-gradient(160deg,#F6BCD2,#EC9FBC);border-radius:10px;z-index:3;
+  box-shadow:0 8px 20px rgba(73,55,68,.2);
+  transition:transform .9s cubic-bezier(.22,1,.36,1),opacity .7s;transform-origin:left bottom;
+}
+.g3d-lid::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:16%;transform:translateX(-50%);background:linear-gradient(90deg,#C9A557,var(--gold),#C9A557)}
+.g3d-bow{position:absolute;left:50%;top:-16%;width:70%;height:auto;z-index:4;transform:translateX(-50%);transition:transform .8s,opacity .6s}
+.g3d-body{
+  position:absolute;left:0;right:0;top:32%;bottom:0;background:linear-gradient(160deg,#FBD0E0,#F3B2C9);
+  border-radius:0 0 12px 12px;z-index:2;box-shadow:0 20px 40px rgba(73,55,68,.22);
+}
+.g3d-body::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:16%;transform:translateX(-50%);background:linear-gradient(90deg,#C9A557,var(--gold),#C9A557)}
+.g3d-letter{
+  position:absolute;left:12%;right:12%;top:30%;height:14%;background:#FFFDF8;border-radius:6px;z-index:1;
+  box-shadow:0 4px 12px rgba(73,55,68,.15);display:flex;align-items:center;justify-content:center;
+  transition:transform 1.1s cubic-bezier(.22,1,.36,1) .35s;
+}
+.g3d-letter .script{font-size:1.1rem;line-height:1;color:var(--gold-deep);padding-top:4px}
+.gift3d.shake{animation:boxShake .5s}
+@keyframes boxShake{
+  0%,100%{transform:rotate(0)}15%{transform:rotate(-4deg) translateY(-3px)}
+  35%{transform:rotate(4deg)}55%{transform:rotate(-3deg) translateY(-4px)}
+  75%{transform:rotate(3deg)}90%{transform:rotate(-1deg)}
+}
+.gift3d.tap1 .g3d-bow{transform:translateX(-50%) rotate(-7deg)}
+.gift3d.tap2 .g3d-bow{transform:translateX(-50%) rotate(7deg) scale(.94)}
+.gift3d.tap3 .g3d-bow{transform:translateX(-50%) rotate(-12deg) scale(.86);opacity:.85}
+.gift3d.tap4 .g3d-bow{transform:translateX(-50%) rotate(14deg) scale(.78) translateY(6px);opacity:.6}
+.gift3d.open .g3d-bow{opacity:0;transform:translateX(-50%) translateY(-40px) scale(.5)}
+.gift3d.open .g3d-lid{transform:translateY(-120px) rotate(-24deg);opacity:0}
+.gift3d.open .g3d-letter{transform:translateY(-78%)}
+.gift3d.open{cursor:default;pointer-events:none}
+.tap-hint{font-size:1rem;font-weight:500;color:var(--ink-soft);animation:pulseNote 2s infinite;margin-top:10px}
+
+/* ---------- الاحتفال والرسالة ---------- */
+#celebration{display:none;text-align:center;width:100%;max-width:520px;position:relative}
+#celebration.show{display:block;animation:letterIn .9s both}
+.hbd-script{
+  font-family:var(--ff-display);font-weight:700;font-size:clamp(2.2rem,10vw,3.6rem);line-height:1.7;padding-block:.05em;
+  background:linear-gradient(120deg,#B8944F,#E3C98F,#B8944F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--gold-deep)
+}
+.hbd-name{font-family:var(--ff-display);font-size:clamp(1.9rem,8vw,2.8rem);font-weight:700;line-height:1.6;margin-top:-6px}
+.letter-final{
+  margin:26px auto 0;width:100%;background:#FFFDF8;border-radius:20px;
+  border:1px solid rgba(214,179,106,.4);box-shadow:var(--shadow);
+  padding:34px 24px 26px;position:relative;
+}
+.letter-final::before,.letter-final::after{content:'';position:absolute;width:34px;height:34px;border:1.5px solid var(--gold);opacity:.5}
+.letter-final::before{top:10px;left:10px;border-right:none;border-bottom:none;border-radius:14px 0 0 0}
+.letter-final::after{bottom:10px;right:10px;border-left:none;border-top:none;border-radius:0 0 14px 0}
+.letter-final .body{font-family:var(--ff-letter);font-size:1.28rem;line-height:2.05;color:var(--ink);text-align:start}
+.letter-final .body.center{text-align:center;font-weight:700}
+.letter-final .body + .body{margin-top:14px}
+.letter-final .sig{display:block;text-align:end;margin-top:20px;font-family:var(--ff-display);font-size:1.4rem;line-height:1.7;color:var(--gold-deep)}
+.letter-final .reveal-line{opacity:0}
+.letter-final.shown .reveal-line{opacity:1}
+.letter-final.reveal .reveal-line{animation:lineIn 1s ease forwards;animation-delay:calc(var(--i) * 1.2s)}
+@keyframes lineIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.star-note{margin-top:18px;font-size:.98rem;font-weight:500;color:var(--ink-soft);line-height:1.8}
+.balloons-wrap{width:min(300px,70vw);margin:6px auto 8px}
+.balloons-img{width:100%;border-radius:20px;box-shadow:var(--shadow);object-fit:cover;aspect-ratio:16/10}
+.balloons-fallback{width:100%;height:auto;border-radius:20px}
+.footer-note{margin-top:26px;font-size:.88rem;color:#B79FAD}
+
+/* ---------- مؤثرات احتفالية ---------- */
+#confetti-layer{position:fixed;inset:0;z-index:40;pointer-events:none;overflow:hidden}
+.confetti-heart{position:absolute;top:-30px;animation:confettiFall linear forwards}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(110vh) rotate(320deg)}}
+.confetti-bit{position:absolute;top:-24px;border-radius:2px;animation:confettiDrift linear forwards;will-change:transform}
+@keyframes confettiDrift{0%{transform:translate3d(0,0,0) rotate(0)}100%{transform:translate3d(var(--dx),110vh,0) rotate(var(--rot))}}
+#flash{
+  position:fixed;inset:0;z-index:45;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 50% 45%,rgba(255,244,214,.85),rgba(248,200,220,.45) 45%,transparent 70%);
+}
+#flash.go{animation:flashGo .9s ease-out}
+@keyframes flashGo{0%{opacity:0}25%{opacity:.7}100%{opacity:0}}
+
+/* ---------- نافذة الرسائل ---------- */
+#sheet{
+  position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(73,55,68,.4);
+}
+.sheet-card{
+  width:100%;max-width:380px;max-height:90vh;overflow:auto;background:#FFFDF8;border-radius:22px;
+  border:1px solid rgba(214,179,106,.45);box-shadow:var(--shadow);padding:28px 22px 22px;text-align:center;
+  animation:letterIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+.sheet-icon{font-size:2.4rem;line-height:1.3;margin-bottom:4px}
+.sheet-card h3{font-family:var(--ff-display);font-size:1.6rem;font-weight:700;line-height:1.6;margin-bottom:6px}
+.sheet-card .sheet-line{font-family:var(--ff-letter);font-size:1.22rem;line-height:2;color:var(--ink-soft)}
+.sheet-sig{display:block;margin-top:10px;font-family:var(--ff-display);font-size:1.3rem;color:var(--gold-deep)}
+.sheet-card .btn-row{margin-top:18px}
+
+/* ---------- إشعار ---------- */
+#toast{
+  position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#FFF3F9;padding:11px 22px;border-radius:999px;
+  font-size:.98rem;line-height:1.6;z-index:70;opacity:0;pointer-events:none;transition:all .4s;
+  width:max-content;max-width:86vw;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.25);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:380px){
+  .screen{padding-left:16px;padding-right:16px}
+  #game-board{gap:8px}
+  .btn{padding:12px 24px;font-size:1rem}
+  .letter-final{padding:30px 18px 22px}
+  .letter-final .body{font-size:1.2rem}
+  .letter-body{font-size:1.25rem}
+  #gift-row{gap:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-delay:0s !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;transition-delay:0s !important}
+  .bg-hearts{display:none}
+}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="bg-hearts" id="bgHearts"></div>
+
+<div id="progress" aria-label="تقدّم الرحلة">
+  <div class="pdot" data-s="1"><span class="tip">الرسالة</span></div>
+  <div class="pdot" data-s="2"><span class="tip">القلوب</span></div>
+  <div class="pdot" data-s="3"><span class="tip">المفاجأة</span></div>
+  <div class="pdot" data-s="4"><span class="tip">الأحجية</span></div>
+  <div class="pdot" data-s="5"><span class="tip">الهدية</span></div>
+</div>
+
+<div id="starHud" aria-label="النجوم التي جمعتِها">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg>
+  <span dir="ltr"><b id="starCount">0</b>/5</span>
+</div>
+
+<button id="soundBtn" class="muted" type="button" aria-label="تشغيل الصوت" aria-pressed="false">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="wave" d="M18.5 5.5a9.5 9.5 0 0 1 0 13"/><line class="off-line" x1="3" y1="3" x2="21" y2="21"/></svg>
+</button>
+
+<div id="confetti-layer" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="sheet-card" id="sheetCard">
+    <div class="sheet-icon" id="sheetIcon" aria-hidden="true"></div>
+    <h3 id="sheetTitle"></h3>
+    <div id="sheetBody"></div>
+    <span class="sheet-sig" id="sheetSig"></span>
+    <div class="btn-row" id="sheetBtns"></div>
+  </div>
+</div>
+
+<noscript><p style="position:relative;z-index:5;text-align:center;padding:40px 20px">يلزم تفعيل جافا سكريبت لعرض هذه الهدية.</p></noscript>
+
+<main id="app">
+
+<!-- ============ شاشة البداية ============ -->
+<section class="screen" id="screen-start">
+  <div class="sealed-tag">مختومة بالحب</div>
+  <h1 class="script start-title">رحلة صغيرة</h1>
+  <div class="start-line"></div>
+  <p class="start-sub">شيء جميل ينتظركِ خلف خمسة أبواب صغيرة. تعالي نكتشفه معاً.</p>
+  <div class="ornament">
+    <svg viewBox="0 0 320 250" aria-hidden="true">
+      <defs>
+        <linearGradient id="sg-env" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBD0E0"/><stop offset="1" stop-color="#F3B2C9"/></linearGradient>
+        <linearGradient id="sg-seal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E3C98F"/><stop offset="1" stop-color="#B8944F"/></linearGradient>
+      </defs>
+      <ellipse cx="160" cy="232" rx="110" ry="12" fill="rgba(73,55,68,.08)"/>
+      <rect x="55" y="70" width="210" height="140" rx="12" fill="url(#sg-env)"/>
+      <path d="M55 82 L160 155 L265 82" fill="none" stroke="#ECA6C3" stroke-width="3" stroke-linecap="round"/>
+      <path d="M57 74 L160 148 L263 74" fill="#FFF6FA" opacity=".6"/>
+      <rect x="55" y="70" width="210" height="140" rx="12" fill="none" stroke="#EBA7C2" stroke-width="2"/>
+      <circle cx="160" cy="150" r="27" fill="url(#sg-seal)"/>
+      <circle cx="160" cy="150" r="20" fill="none" stroke="#FFF6E8" stroke-width="1.5" opacity=".7"/>
+      <text x="160" y="163" text-anchor="middle" font-family="Aref Ruqaa, Amiri, serif" font-size="32" fill="#5C4520">آ</text>
+      <path d="M118 40 c-8-12-28-6-26 8 c2 12 20 20 26 24 c6-4 24-12 26-24 c2-14-18-20-26-8z" fill="#F8C8DC" opacity=".9"/>
+      <path d="M212 30 c-6-9-21-4.5-19.5 6 c1.5 9 15 15 19.5 18 c4.5-3 18-9 19.5-18 c1.5-10.5-13.5-15-19.5-6z" fill="#D6B36A" opacity=".55"/>
+      <g stroke="#D6B36A" stroke-width="1.4" fill="#D6B36A" opacity=".8">
+        <path d="M245 62 l3 7 7 3 -7 3 -3 7 -3-7 -7-3 7-3z"/>
+        <path d="M78 52 l2 5 5 2 -5 2 -2 5 -2-5 -5-2 5-2z"/>
+      </g>
+    </svg>
+  </div>
+  <button class="btn" id="btn-start" type="button"><span>ابدئي الرحلة</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+</section>
+
+<!-- ============ المرحلة ١ ============ -->
+<section class="screen" id="screen-1">
+  <p class="stage-eyebrow">المرحلة الأولى</p>
+  <h2 class="stage-title">وصلتكِ رسالة</h2>
+  <p class="stage-sub">كلمات صغيرة مختومة داخل هذا الظرف... المسيه برفق لتفتحيه.</p>
+  <div class="env-scene" id="envScene">
+    <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="افتحي الظرف">
+      <div class="env-back"></div>
+      <div class="env-letter"><span class="script">إلى آية</span></div>
+      <div class="env-side left"></div>
+      <div class="env-side right"></div>
+      <div class="env-bottom"></div>
+      <div class="env-flap"><div class="env-seal"><span class="script">آ</span></div></div>
+    </div>
+  </div>
+  <p class="tap-note" id="envTapNote">المسي الظرف</p>
+  <div class="letter-card" id="letterCard" style="display:none">
+    <p class="letter-body">بعض المشاعر أجمل من أن تُقال بصوتٍ عالٍ، فكتبتُها لكِ وطويتُها بعناية. أكملي الرحلة، فأجمل ما فيها لا يزال في انتظاركِ.</p>
+    <div class="btn-row"><button class="btn" id="btn-stage1-next" type="button"><span>واصلي الرحلة</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button></div>
+  </div>
+  <div class="star-row"><button class="star-pick" type="button" data-star="1" aria-label="نجمة صغيرة، المسيها لتجمعيها"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg></button></div>
+</section>
+
+<!-- ============ المرحلة ٢ ============ -->
+<section class="screen" id="screen-2">
+  <p class="stage-eyebrow">المرحلة الثانية</p>
+  <h2 class="stage-title">ابحثي عن القلوب المتشابهة</h2>
+  <p class="stage-sub">اثنا عشر قلباً مختبئاً، ولكل قلبٍ توأم. اقلبي البطاقات وطابقي كل زوج.</p>
+  <div class="game-stats">
+    <span>المحاولات <b id="attempts">0</b></span>
+    <span>الأزواج <b id="pairsFound">0</b> من 6</span>
+  </div>
+  <div id="game-board" aria-label="لعبة مطابقة القلوب"></div>
+  <button class="hint-btn" id="matchHint" type="button">أحتاج تلميحاً</button>
+  <div id="match-win" style="display:none">
+    <p class="script">رائع! كل قلبٍ وجد توأمه.</p>
+    <div class="btn-row"><button class="btn" id="btn-stage2-next" type="button"><span>متابعة</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button></div>
+  </div>
+  <div class="star-row"><button class="star-pick" type="button" data-star="2" aria-label="نجمة صغيرة، المسيها لتجمعيها"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg></button></div>
+</section>
+
+<!-- ============ المرحلة ٣ ============ -->
+<section class="screen" id="screen-3">
+  <button class="secret-heart" id="secretHeart" type="button" aria-label="قلب صغير مختبئ، المسيه"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 C6 15 2 12 2 7.5 A4 4 0 0 1 9 6.2 C9.8 4 11.2 3 12 3.6 C12.8 3 14.2 4 15 6.2 A4 4 0 0 1 22 7.5 C22 12 18 15 12 21Z"/></svg></button>
+  <p class="stage-eyebrow">المرحلة الثالثة</p>
+  <h2 class="stage-title">اختاري مفاجأتكِ</h2>
+  <p class="stage-sub">ثلاث هدايا صغيرة وثلاث أمنيات. اتبعي قلبكِ واختاري واحدة.</p>
+  <div id="gift-row"></div>
+  <div id="gift-reveal">
+    <div class="reward-emoji" id="giftEmoji"></div>
+    <h3 id="giftTitle"></h3>
+    <p id="giftMsg"></p>
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-stage3-repick" type="button">اختيار آخر</button>
+      <button class="btn" id="btn-stage3-next" type="button"><span>التالي</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    </div>
+  </div>
+  <div class="star-row"><button class="star-pick" type="button" data-star="3" aria-label="نجمة صغيرة، المسيها لتجمعيها"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg></button></div>
+</section>
+
+<!-- ============ المرحلة ٤ ============ -->
+<section class="screen" id="screen-4">
+  <p class="stage-eyebrow">المرحلة الرابعة</p>
+  <h2 class="stage-title">أكملي القلب</h2>
+  <p class="stage-sub">أربع قطع من قلبٍ مبعثرة وخجولة. اسحبي كل قطعة إلى مكانها، أو المسي القطعة ثم المسي مكانها على القلب.</p>
+  <div id="puzzle-area">
+    <div id="puzzle-slots">
+      <svg viewBox="0 10 100 80" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="slotHeartClip"><path d="M50,88 C20,60 5,45 5,28 A12,12 0 0 1 30,25 C33,15 42,12 50,18 C58,12 67,15 70,25 A12,12 0 0 1 95,28 C95,45 80,60 50,88 Z"/></clipPath>
+        </defs>
+        <path d="M50,88 C20,60 5,45 5,28 A12,12 0 0 1 30,25 C33,15 42,12 50,18 C58,12 67,15 70,25 A12,12 0 0 1 95,28 C95,45 80,60 50,88 Z"
+              fill="rgba(248,200,220,.16)" stroke="#D6B36A" stroke-width=".9" stroke-dasharray="3 2.4"/>
+        <g clip-path="url(#slotHeartClip)" stroke="#D6B36A" stroke-width=".7" stroke-dasharray="3 2.4" opacity=".7">
+          <line x1="50" y1="8" x2="50" y2="90"/>
+          <line x1="0" y1="46" x2="100" y2="46"/>
+        </g>
+      </svg>
+    </div>
+    <div class="piece-tray" id="tray"><span class="tray-hint" id="trayHint">القطع تنتظركِ هنا</span></div>
+  </div>
+  <button class="hint-btn" id="puzzleHint" type="button">أحتاج تلميحاً</button>
+  <div id="heart-done">
+    <p class="script">قطعٌ متفرقة... وقلبٌ واحد.</p>
+    <div class="btn-row"><button class="btn" id="btn-stage4-next" type="button"><span>اقتربنا</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button></div>
+  </div>
+  <div class="star-row"><button class="star-pick" type="button" data-star="4" aria-label="نجمة صغيرة، المسيها لتجمعيها"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg></button></div>
+</section>
+
+<!-- ============ المرحلة ٥ ============ -->
+<section class="screen" id="screen-5">
+  <div id="final-head" style="text-align:center">
+    <p class="stage-eyebrow">المرحلة الأخيرة</p>
+    <h2 class="stage-title">مفاجأتكِ الأخيرة تنتظركِ...</h2>
+  </div>
+  <div id="final-scene">
+    <div id="tap-count" aria-label="تقدّم اللمسات">
+      <span class="tap-dot"></span><span class="tap-dot"></span><span class="tap-dot"></span><span class="tap-dot"></span><span class="tap-dot"></span>
+    </div>
+    <div class="gift3d-scene">
+      <div class="gift3d" id="gift3d" role="button" tabindex="0" aria-label="المسي صندوق الهدية">
+        <div class="g3d-letter"><span class="script">افتحيني</span></div>
+        <div class="g3d-body"></div>
+        <div class="g3d-lid"></div>
+        <svg class="g3d-bow" viewBox="0 0 140 70" aria-hidden="true">
+          <g fill="none" stroke="#D6B36A" stroke-width="7" stroke-linecap="round">
+            <path d="M70 38 C50 12 20 16 26 34 C30 48 56 46 70 38Z" fill="#D6B36A" stroke="none"/>
+            <path d="M70 38 C90 12 120 16 114 34 C110 48 84 46 70 38Z" fill="#D6B36A" stroke="none"/>
+            <path d="M64 42 L52 66 M76 42 L88 66" stroke="#C9A557"/>
+          </g>
+          <circle cx="70" cy="38" r="9" fill="#B8944F"/>
+        </svg>
+      </div>
+    </div>
+    <p class="tap-hint" id="tapHint">المسي الصندوق خمس مرات</p>
+    <div class="star-row"><button class="star-pick" type="button" data-star="5" aria-label="نجمة صغيرة، المسيها لتجمعيها"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg></button></div>
+  </div>
+
+  <div id="celebration">
+    <div class="balloons-wrap">
+      <img class="balloons-img" id="balloonsImg" src="https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&q=70&auto=format&fit=crop" alt="بالونات وردية لعيد الميلاد" decoding="async" referrerpolicy="no-referrer">
+      <svg class="balloons-fallback" id="balloonsFallback" viewBox="0 0 300 190" aria-hidden="true" hidden>
+        <rect width="300" height="190" rx="20" fill="#FCE4EC"/>
+        <g stroke="#B8944F" stroke-width="1.5" fill="none" opacity=".7"><path d="M90 110 C95 140 120 160 150 175"/><path d="M150 100 L150 175"/><path d="M210 110 C205 140 180 160 150 175"/></g>
+        <ellipse cx="90" cy="75" rx="32" ry="38" fill="#F8C8DC"/>
+        <ellipse cx="150" cy="62" rx="34" ry="40" fill="#F3A9C6"/>
+        <ellipse cx="210" cy="75" rx="32" ry="38" fill="#E3C98F"/>
+      </svg>
+    </div>
+    <h2 class="hbd-script">عيد ميلاد سعيد</h2>
+    <h2 class="hbd-name">يا آية</h2>
+
+    <div class="letter-final" id="letterFinal">
+      <!-- ✎ نص رسالة أسامة (يظهر سطراً بعد سطر) -->
+      <p class="body center reveal-line" style="--i:0">آية، كل عام وأنتِ بخير ❤️</p>
+      <p class="body reveal-line" style="--i:1">اليوم حبيت أقدملك شيئًا مختلفًا، مش مجرد رسالة عادية أو تهنئة سريعة. صنعت لكِ هذه الرحلة الصغيرة بنفسي، ووضعت فيها بعض الألعاب والمفاجآت، فقط حتى تكون ابتسامتك جزءًا من هذا اليوم.</p>
+      <p class="body reveal-line" style="--i:2">أتمنى أن تكون سنتك الجديدة مليئة بالأيام الجميلة والنجاحات واللحظات التي تستحقينها.</p>
+      <p class="body reveal-line" style="--i:3">يمكن هذه الهدية بسيطة، لكنها صُنعت بكل اهتمام، وكل تفصيلة فيها كانت من أجلك.</p>
+      <p class="body center reveal-line" style="--i:4">عيد ميلاد سعيد يا آية 🎂</p>
+      <span class="sig reveal-line" style="--i:5">— من أسامة إليكِ ❤️</span>
+      <!-- ✎ نهاية الرسالة -->
+    </div>
+
+    <p class="star-note" id="starNote"></p>
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-restart" type="button">إعادة الرحلة من البداية</button>
+    </div>
+    <p class="footer-note">صُنعت هذه الرحلة لآية بكل اهتمام</p>
+  </div>
+</section>
+</main>
+
+<script>
+/* ============================================================
+   رحلة صغيرة لآية — منطق اللعبة
+   ============================================================ */
+(function(){
+'use strict';
+
+/* ---------- أدوات مساعدة ---------- */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rand = (a, b) => a + Math.random() * (b - a);
+const reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+const TOTAL_STARS = 5;
+
+/* ---------- حالة التقدّم المحفوظة ---------- */
+const KEY = 'ayaJourney.v3';
+const defaults = () => ({ v: 3, stage: 0, cleared: {}, gift: -1, memAttempts: 0, stars: [], secret: false, bonus: false });
+function sanitize(o){
+  const d = defaults();
+  if(!o || typeof o !== 'object' || o.v !== 3) return d;
+  if(o.stage === 'done' || (Number.isInteger(o.stage) && o.stage >= 0 && o.stage <= 5)) d.stage = o.stage;
+  if(o.cleared && typeof o.cleared === 'object') for(let i = 1; i <= 4; i++) if(o.cleared[i] === true) d.cleared[i] = true;
+  if(Number.isInteger(o.gift) && o.gift >= -1 && o.gift <= 2) d.gift = o.gift;
+  if(Number.isInteger(o.memAttempts) && o.memAttempts >= 0 && o.memAttempts <= 999) d.memAttempts = o.memAttempts;
+  if(Array.isArray(o.stars)) d.stars = o.stars.filter((x, i, a)=>Number.isInteger(x) && x >= 1 && x <= TOTAL_STARS && a.indexOf(x) === i);
+  d.secret = o.secret === true;
+  d.bonus = o.bonus === true && d.stars.length === TOTAL_STARS;
+  return d;
+}
+let S = defaults();
+try{ S = sanitize(JSON.parse(localStorage.getItem(KEY))); localStorage.removeItem('ayaJourney'); localStorage.removeItem('ayaJourney.v2'); }catch(e){ S = defaults(); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }  // إن تعذّر التخزين تستمر اللعبة دون حفظ
+function wipe(){ S = defaults(); try{ localStorage.removeItem(KEY); }catch(e){} }
+
+/* ---------- مؤقّتات مُدارة ---------- */
+const timers = new Set();
+function later(fn, ms){
+  const id = setTimeout(()=>{ timers.delete(id); fn(); }, ms);
+  timers.add(id);
+  return id;
+}
+function cancelAll(){ timers.forEach(clearTimeout); timers.clear(); }
+
+/* ---------- إشعار ---------- */
+let toastTimer = 0;
+function toast(msg, ms){
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), ms || 2600);
+}
+function softScroll(el, block){
+  try{ el.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: block || 'center' }); }
+  catch(e){ el.scrollIntoView(); }
+}
+
+/* ---------- صوت هادئ (WebAudio بلا ملفات، يبدأ فقط بعد تفاعل المستخدم) ---------- */
+let audioCtx = null, soundOn = false;
+function ac(){
+  try{
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }catch(e){ return null; }
+}
+function pluck(freq, delay, dur, vol){
+  if(!soundOn) return;
+  try{
+    const ctx = ac(); if(!ctx) return;
+    const t = ctx.currentTime + (delay || 0);
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .015);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + dur + .05);
+  }catch(e){}
+}
+const sfx = {
+  tap(){ pluck(660, 0, .35, .1); },
+  flip(){ pluck(523.25, 0, .3, .09); },
+  match(){ pluck(523.25, 0, .4, .1); pluck(783.99, .09, .45, .1); },
+  no(){ pluck(220, 0, .3, .08); },
+  pass(){ pluck(659.25, 0, .35, .09); pluck(987.77, .1, .45, .09); },
+  star(){ pluck(1318.5, 0, .4, .08); pluck(1760, .08, .55, .07); },
+  win(){ [523.25, 659.25, 783.99, 1046.5].forEach((f, i)=>pluck(f, i * .13, .55, .11)); },
+  magic(){ pluck(880, 0, .6, .08); pluck(1174.66, .12, .7, .07); },
+  chime(){ pluck(1046.5, 0, .8, .06); pluck(1318.5, .18, .9, .05); }
+};
+const soundBtn = $('#soundBtn');
+soundBtn.addEventListener('click', ()=>{
+  if(!soundOn && !(window.AudioContext || window.webkitAudioContext)){ toast('الصوت غير متاح على هذا المتصفح'); return; }
+  soundOn = !soundOn;
+  soundBtn.classList.toggle('muted', !soundOn);
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
+  soundBtn.setAttribute('aria-label', soundOn ? 'إيقاف الصوت' : 'تشغيل الصوت');
+  if(soundOn){ ac(); sfx.chime(); toast('تم تشغيل الصوت'); } else toast('تم إيقاف الصوت');
+});
+
+/* ---------- قلوب الخلفية ---------- */
+const HEART_PATH = 'M10 17 C5 12 0 9 0 5.5 A3.5 3.5 0 0 1 7 4.5 C7.8 2.6 9.5 2 11 3 C12.5 2 14.2 2.6 15 4.5 A3.5 3.5 0 0 1 22 5.5 C22 9 17 12 12 17Z';
+const STAR_PATH = 'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z';
+(function ambient(){
+  const layer = $('#bgHearts');
+  for(let i = 0; i < 8; i++){
+    const el = document.createElement('div');
+    el.className = 'float-heart';
+    const s = 12 + Math.random() * 20;
+    el.style.cssText = `left:${Math.random() * 100}%;width:${s}px;height:${s}px;animation-duration:${14 + Math.random() * 14}s;animation-delay:-${Math.random() * 20}s`;
+    el.innerHTML = `<svg viewBox="0 0 24 24" fill="${Math.random() < .5 ? '#F8C8DC' : '#D6B36A'}" opacity="${.35 + Math.random() * .3}"><path d="${HEART_PATH}"/></svg>`;
+    layer.appendChild(el);
+  }
+  document.addEventListener('visibilitychange', ()=>document.body.classList.toggle('paused', document.hidden));
+})();
+
+/* ---------- مؤثرات احتفالية خفيفة (سقف أقصى للعناصر) ---------- */
+const layer = $('#confetti-layer');
+const CAP = 60;
+function room(n){ return Math.min(n || 0, Math.max(0, CAP - layer.childElementCount)); }
+function popHearts(count){
+  if(reduceMotion.matches) return;
+  const n = room(count || 8);
+  for(let i = 0; i < n; i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-heart';
+    const s = 12 + Math.random() * 16;
+    el.style.cssText = `left:${Math.random() * 100}%;width:${s}px;height:${s}px;animation-duration:${1.6 + Math.random() * 1.6}s;animation-delay:${Math.random() * .5}s`;
+    el.innerHTML = `<svg viewBox="0 0 24 24" fill="${['#F8C8DC', '#D6B36A', '#F3A9C6'][i % 3]}"><path d="${HEART_PATH}"/></svg>`;
+    el.addEventListener('animationend', ()=>el.remove(), { once: true });
+    layer.appendChild(el);
+  }
+}
+function popConfetti(count, stars){
+  if(reduceMotion.matches) return;
+  const colors = ['#F8C8DC', '#D6B36A', '#F3A9C6', '#FFF1C4', '#E3C98F'];
+  const n = room(count || 20);
+  for(let i = 0; i < n; i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-bit';
+    const s = stars ? 14 + Math.random() * 10 : 7 + Math.random() * 6;
+    el.style.cssText = `left:${Math.random() * 100}%;width:${s}px;height:${stars ? s : s * 1.6}px;--dx:${rand(-70, 70)}px;--rot:${rand(360, 900)}deg;animation-duration:${2 + Math.random() * 1.8}s;animation-delay:${Math.random() * .6}s`;
+    if(stars) el.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%" fill="#D6B36A"><path d="${STAR_PATH}"/></svg>`;
+    else el.style.background = colors[i % colors.length];
+    el.addEventListener('animationend', ()=>el.remove(), { once: true });
+    layer.appendChild(el);
+  }
+}
+function stageFlash(){
+  if(reduceMotion.matches) return;
+  const f = $('#flash');
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+}
+
+/* ============================================================
+   نافذة الرسائل (للقلب السري، مفاجأة النجوم، تأكيد إعادة الرحلة)
+   ============================================================ */
+const sheet = $('#sheet');
+let sheetOpen = false, sheetQueue = [], sheetReturn = null;
+function openSheet(o){
+  if(sheetOpen){ sheetQueue.push(o); return; }
+  sheetOpen = true;
+  sheetReturn = document.activeElement;
+  $('#sheetIcon').textContent = o.icon || '';
+  $('#sheetTitle').textContent = o.title || '';
+  const body = $('#sheetBody'); body.innerHTML = '';
+  (o.lines || []).forEach(t=>{ const p = document.createElement('p'); p.className = 'sheet-line'; p.textContent = t; body.appendChild(p); });
+  $('#sheetSig').textContent = o.sig || '';
+  const btns = $('#sheetBtns'); btns.innerHTML = '';
+  let used = false, focusEl = null;
+  (o.buttons || [{ label: 'حسناً' }]).forEach(b=>{
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'btn' + (b.ghost ? ' ghost' : ''); el.textContent = b.label;
+    el.addEventListener('click', ()=>{
+      if(used || !sheetOpen) return;     // يمنع التنفيذ المزدوج عند الضغط السريع
+      used = true; closeSheet(); if(b.fn) b.fn();
+    });
+    btns.appendChild(el);
+    if(b.focus || !focusEl) focusEl = (b.focus || !focusEl) ? el : focusEl;
+  });
+  sheet.hidden = false;
+  document.body.classList.add('sheet-open');
+  if(focusEl) focusEl.focus();
+}
+function closeSheet(){
+  if(!sheetOpen) return;
+  sheetOpen = false;
+  sheet.hidden = true;
+  document.body.classList.remove('sheet-open');
+  try{ if(sheetReturn && sheetReturn.focus) sheetReturn.focus(); }catch(e){}
+  const next = sheetQueue.shift();
+  if(next) later(()=>openSheet(next), 250);
+}
+sheet.addEventListener('click', e=>{ if(e.target === sheet) closeSheet(); });
+document.addEventListener('keydown', e=>{
+  if(!sheetOpen) return;
+  if(e.key === 'Escape'){ closeSheet(); return; }
+  if(e.key === 'Tab'){
+    const f = $$('button', $('#sheetBtns'));
+    if(!f.length) return;
+    const i = f.indexOf(document.activeElement);
+    e.preventDefault();
+    f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+  }
+});
+
+/* ============================================================
+   النجوم والقلب السرّي
+   ============================================================ */
+const hud = $('#starHud');
+function updateHud(){ $('#starCount').textContent = S.stars.length; }
+function syncStars(){
+  $$('.star-pick').forEach(b=>{ b.hidden = S.stars.includes(+b.dataset.star); b.classList.remove('got'); });
+  updateHud();
+}
+function showBonus(){
+  sfx.win(); popConfetti(24, true); popHearts(8);
+  openSheet({
+    icon: '⭐', title: 'جمعتِ كل النجوم!',
+    lines: ['ولأنكِ جمعتِ النجوم كلها، هذه كلمة صغيرة إضافية: أتمنى أن تبقى حياتكِ مليئة بالأشياء الصغيرة التي تُسعدكِ.'],
+    sig: '— أسامة', buttons: [{ label: 'شكراً' }]
+  });
+}
+function collectStar(btn){
+  const id = +btn.dataset.star;
+  if(S.stars.includes(id) || btn.classList.contains('got')) return;
+  S.stars.push(id); save();
+  btn.classList.add('got');
+  sfx.star(); popHearts(3);
+  updateHud();
+  hud.classList.remove('bump'); void hud.offsetWidth; hud.classList.add('bump');
+  toast('نجمة جديدة! ' + S.stars.length + ' من ' + TOTAL_STARS);
+  later(()=>{ btn.hidden = true; }, 600);
+  if(S.stars.length === TOTAL_STARS && !S.bonus){ S.bonus = true; save(); later(showBonus, 900); }
+}
+$$('.star-pick').forEach(b=>b.addEventListener('click', ()=>collectStar(b)));
+
+const secretHeart = $('#secretHeart');
+secretHeart.addEventListener('click', ()=>{
+  if(S.secret) return;
+  S.secret = true; save();
+  secretHeart.hidden = true;
+  sfx.magic(); popHearts(8);
+  openSheet({
+    icon: '💗', title: 'وجدتِ القلب السري!',
+    lines: ['هذا القلب الصغير كان مختبئاً هنا من أجلكِ وحدكِ. ابتسمي، فاليوم يومكِ.'],
+    sig: '— أسامة', buttons: [{ label: 'شكراً' }]
+  });
+});
+
+/* ============================================================
+   التنقّل بين الشاشات
+   ============================================================ */
+let currentStage = 0;
+const enter = {};
+let skipStarHint = false;
+
+function setProgress(n){
+  $('#progress').classList.toggle('show', n >= 1);
+  hud.classList.toggle('show', n >= 1);
+  $$('.pdot').forEach(d=>{
+    const s = +d.dataset.s;
+    d.classList.toggle('done', s < n);
+    d.classList.toggle('now', s === n);
+  });
+}
+function showScreen(n, restoring){
+  currentStage = n;
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  const el = $(n === 0 ? '#screen-start' : '#screen-' + n);
+  el.classList.add('active');
+  el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  setProgress(n);
+  syncStars();
+  if(enter[n]) enter[n](!!restoring);
+  window.scrollTo(0, 0);
+  if(n >= 1){ S.stage = n; save(); }
+}
+function advance(from){
+  if(currentStage !== from) return;      // يمنع التنفيذ المزدوج
+  sfx.pass(); stageFlash(); popHearts(5);
+  showScreen(from + 1, false);
+}
+
+/* ============================================================
+   المرحلة ١ — الظرف
+   ============================================================ */
+const envScene = $('#envScene'), envelope = $('#envelope'), letterCard = $('#letterCard'), envNote = $('#envTapNote');
+let envOpened = false;
+enter[1] = function(restoring){
+  envOpened = false;
+  envScene.classList.remove('open');
+  envelope.classList.remove('open');
+  envelope.tabIndex = 0; envelope.setAttribute('aria-disabled', 'false');
+  letterCard.style.display = 'none';
+  envNote.style.display = '';
+  if(restoring){
+    envScene.classList.add('instant');
+    envOpened = true;
+    envScene.classList.add('open'); envelope.classList.add('open');
+    envelope.tabIndex = -1; envelope.setAttribute('aria-disabled', 'true');
+    letterCard.style.display = 'block'; envNote.style.display = 'none';
+    void envScene.offsetWidth;
+    later(()=>envScene.classList.remove('instant'), 60);
+  } else if(!skipStarHint && S.stars.length === 0){
+    later(()=>toast('في كل مرحلة نجمة صغيرة مختبئة، اجمعيها كلها'), 1400);
+  }
+  skipStarHint = false;
+};
+function openEnvelope(){
+  if(envOpened || currentStage !== 1) return;
+  envOpened = true;
+  S.cleared[1] = true; save();
+  envScene.classList.add('open');
+  envelope.classList.add('open');
+  envelope.tabIndex = -1; envelope.setAttribute('aria-disabled', 'true');
+  envNote.style.display = 'none';
+  sfx.magic();
+  later(()=>{ letterCard.style.display = 'block'; softScroll(letterCard, 'center'); }, reduceMotion.matches ? 0 : 900);
+}
+envelope.addEventListener('click', openEnvelope);
+envelope.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openEnvelope(); } });
+$('#btn-stage1-next').addEventListener('click', ()=>{ if(envOpened) advance(1); });
+
+/* ============================================================
+   المرحلة ٢ — مطابقة القلوب
+   ============================================================ */
+const heartSVG = (fill, stroke, extra) => `<svg viewBox="0 0 24 24"><path fill="${fill}" ${stroke ? `stroke="${stroke}" stroke-width="1"` : ''} d="M12 21 C6 15 2 12 2 7.5 A4 4 0 0 1 9 6.2 C9.8 4 11.2 3 12 3.6 C12.8 3 14.2 4 15 6.2 A4 4 0 0 1 22 7.5 C22 12 18 15 12 21Z"/>${extra || ''}</svg>`;
+const HEART_SYMBOLS = [
+  { id:'rose',   svg: heartSVG('#F3A9C6', '#B8944F', '<circle cx="12" cy="9.4" r="1.6" fill="#B8944F"/>') },
+  { id:'gold',   svg: heartSVG('#E3C98F', '#B8944F', '<path d="M12 5.4 l.9 2.2 2.2.3 -1.6 1.5 .4 2.2 -1.9-1 -1.9 1 .4-2.2 -1.6-1.5 2.2-.3z" fill="#FFF9E8"/>') },
+  { id:'plain',  svg: heartSVG('#F8C8DC', '#E8A6C2') },
+  { id:'ribbon', svg: heartSVG('#F3A9C6', '', '<path d="M4.5 9.5 C8 12 16 12 19.5 9.5" stroke="#FFF9FC" stroke-width="1.8" fill="none" stroke-linecap="round"/>') },
+  { id:'dots',   svg: heartSVG('#E8BFD1', '', '<circle cx="8" cy="9" r="1.2" fill="#FFF9FC"/><circle cx="12" cy="12.5" r="1.2" fill="#FFF9FC"/><circle cx="16" cy="9" r="1.2" fill="#FFF9FC"/>') },
+  { id:'deep',   svg: heartSVG('#D67CA0', '#B8944F', '<path fill="#F8C8DC" d="M12 17.5 C8.2 13.9 5.6 11.6 5.6 8.6 A2.6 2.6 0 0 1 10 7.8 C10.6 6.4 11.5 5.8 12 6.2 C12.5 5.8 13.4 6.4 14 7.8 A2.6 2.6 0 0 1 18.4 8.6 C18.4 11.6 15.8 13.9 12 17.5Z"/>') }
+];
+const TOTAL_PAIRS = HEART_SYMBOLS.length;
+const board = $('#game-board');
+const CARD_LABEL = 'بطاقة مقلوبة، المسيها لتكشفي القلب';
+let firstCard = null, lock = false, attempts = 0, pairsFound = 0, hintsLeft = 3, matchDone = false;
+
+enter[2] = function(restoring){
+  firstCard = null; lock = false; attempts = 0; pairsFound = 0; hintsLeft = 3; matchDone = false;
+  $('#attempts').textContent = '0'; $('#pairsFound').textContent = '0';
+  $('#match-win').style.display = 'none';
+  $('#matchHint').style.display = '';
+  board.classList.remove('instant');
+  board.innerHTML = '';
+  const deck = HEART_SYMBOLS.concat(HEART_SYMBOLS)
+    .map(s=>({ s, k: Math.random() })).sort((a, b)=>a.k - b.k).map(x=>x.s);
+  deck.forEach(sym=>{
+    const card = document.createElement('div');
+    card.className = 'mcard'; card.dataset.id = sym.id;
+    card.setAttribute('role', 'button'); card.tabIndex = 0;
+    card.setAttribute('aria-label', CARD_LABEL);
+    card.innerHTML = `
+      <div class="mcard-inner">
+        <div class="mface back"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFF9FC" opacity=".9" d="${HEART_PATH}"/></svg></div>
+        <div class="mface front">${sym.svg}</div>
+      </div>`;
+    card.addEventListener('click', ()=>flipCard(card));
+    card.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(card); } });
+    board.appendChild(card);
+  });
+  if(restoring){                        // اللعبة مكتملة سابقاً: أعرضها مكتملة فوراً
+    board.classList.add('instant');
+    $$('.mcard', board).forEach(c=>{ c.classList.add('flipped', 'matched'); c.setAttribute('aria-label', 'قلب مكشوف'); });
+    pairsFound = TOTAL_PAIRS; matchDone = true;
+    $('#pairsFound').textContent = String(TOTAL_PAIRS);
+    $('#attempts').textContent = S.memAttempts ? String(S.memAttempts) : '—';
+    $('#matchHint').style.display = 'none';
+    $('#match-win').style.display = 'block';
+    void board.offsetWidth;
+    later(()=>board.classList.remove('instant'), 80);
+  }
+};
+function flipCard(card){
+  if(lock || matchDone || card.classList.contains('flipped')) return;
+  sfx.flip();
+  card.classList.add('flipped');
+  card.setAttribute('aria-label', 'قلب مكشوف');
+  if(!firstCard){ firstCard = card; return; }
+  const a = firstCard; firstCard = null;
+  attempts++; $('#attempts').textContent = attempts;
+  if(a.dataset.id === card.dataset.id){
+    a.classList.add('matched'); card.classList.add('matched');
+    sfx.match(); pairsFound++; $('#pairsFound').textContent = pairsFound;
+    if(pairsFound === TOTAL_PAIRS){
+      matchDone = true;
+      S.cleared[2] = true; S.memAttempts = Math.min(attempts, 999); save();
+      $('#matchHint').style.display = 'none';
+      later(()=>{ $('#match-win').style.display = 'block'; sfx.win(); popHearts(10); softScroll($('#match-win'), 'center'); }, 500);
+    }
+  } else {
+    lock = true; sfx.no();
+    later(()=>{ a.classList.add('shake'); card.classList.add('shake'); }, 350);
+    later(()=>{
+      [a, card].forEach(c=>{ c.classList.remove('flipped', 'shake'); c.setAttribute('aria-label', CARD_LABEL); });
+      lock = false;
+    }, 950);
+  }
+}
+/* التلميح بصري فقط (توهّج): لا يقلب البطاقات ولا يلمس حالة اللعبة */
+$('#matchHint').addEventListener('click', ()=>{
+  if(matchDone || lock) return;
+  if(hintsLeft <= 0){ toast('استخدمتِ كل التلميحات، وأنتِ قادرة على الإكمال!'); return; }
+  const hidden = $$('.mcard:not(.flipped):not(.matched)', board);
+  let targets = [];
+  if(firstCard){
+    const twin = hidden.find(c=>c.dataset.id === firstCard.dataset.id);
+    if(twin) targets = [twin];
+  } else if(hidden.length){
+    const a = hidden[Math.floor(Math.random() * hidden.length)];
+    const twin = hidden.find(c=>c !== a && c.dataset.id === a.dataset.id);
+    if(twin) targets = [a, twin];
+  }
+  if(!targets.length){ toast('أوشكتِ على الانتهاء!'); return; }
+  hintsLeft--;
+  targets.forEach(c=>{
+    c.classList.remove('hinted'); void c.offsetWidth; c.classList.add('hinted');
+    later(()=>c.classList.remove('hinted'), 1800);
+  });
+  sfx.tap(); toast(targets.length === 2 ? 'هذان القلبان توأمان، راقبي التوهّج' : 'توأم القلب المكشوف يتوهّج الآن');
+});
+$('#btn-stage2-next').addEventListener('click', ()=>{ if(matchDone) advance(2); });
+
+/* ============================================================
+   المرحلة ٣ — اختاري مفاجأتك
+   ============================================================ */
+const GIFTS = [
+  { emoji:'🌹', title:'وردة لكِ', msg:'وردة واحدة لا تكفي لتقولي كم أنتِ غالية، لكنها بداية صغيرة لأيامٍ مليئة بالفرح.', colors:['#FBD0E0','#F3B2C9'], ribbon:'#D6B36A' },
+  { emoji:'⭐', title:'حفنة من النجوم', msg:'جمعتُ لكِ حفنة من النجوم، لتضيء كل ليلة من ليالي هذا العام الجديد.', colors:['#FCE4EC','#F8C8DC'], ribbon:'#C9A557' },
+  { emoji:'🍰', title:'أحلى أمنية', msg:'أغمضي عينيكِ وتمنّي شيئاً جميلاً... لعلّ هذا العام يحمل لكِ كل ما تتمنين.', colors:['#FBE3D2','#F5C9B4'], ribbon:'#D6B36A' }
+];
+const giftRow = $('#gift-row'), giftReveal = $('#gift-reveal');
+let selectedGift = -1, giftBusy = false;
+
+function giftSVG(colors, ribbon){
+  return `<svg viewBox="0 0 120 120" aria-hidden="true">
+    <ellipse cx="60" cy="108" rx="44" ry="7" fill="rgba(73,55,68,.1)"/>
+    <rect x="22" y="52" width="76" height="52" rx="8" fill="${colors[0]}" stroke="${colors[1]}" stroke-width="2"/>
+    <rect x="16" y="34" width="88" height="24" rx="8" fill="${colors[1]}"/>
+    <rect x="52" y="34" width="16" height="70" fill="${ribbon}" opacity=".95"/>
+    <path d="M60 34 C46 18 24 22 28 34 C31 44 50 42 60 34Z" fill="${ribbon}"/>
+    <path d="M60 34 C74 18 96 22 92 34 C89 44 70 42 60 34Z" fill="${ribbon}"/>
+    <circle cx="60" cy="34" r="6" fill="${ribbon}" stroke="#FFF9FC" stroke-width="1.4"/>
+    <path d="M32 46 h18 M70 46 h18" stroke="#FFF9FC" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>
+  </svg>`;
+}
+enter[3] = function(restoring){
+  selectedGift = -1; giftBusy = false;
+  giftReveal.classList.remove('show');
+  secretHeart.hidden = S.secret;
+  giftRow.innerHTML = '';
+  GIFTS.forEach((g, i)=>{
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'gift-box';
+    b.setAttribute('aria-label', 'الهدية رقم ' + (i + 1));
+    b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = giftSVG(g.colors, g.ribbon);
+    b.addEventListener('click', ()=>pickGift(i));
+    giftRow.appendChild(b);
+  });
+  if(restoring && S.gift >= 0) applyGift(S.gift);
+};
+function applyGift(i){
+  selectedGift = i;
+  const boxes = $$('.gift-box', giftRow);
+  boxes.forEach((b, j)=>{
+    b.classList.toggle('selected', j === i);
+    b.classList.toggle('dim', j !== i);
+    b.setAttribute('aria-pressed', String(j === i));
+    b.classList.remove('chosen');
+  });
+  const g = GIFTS[i];
+  $('#giftEmoji').textContent = g.emoji;
+  $('#giftTitle').textContent = g.title;
+  $('#giftMsg').textContent = g.msg;
+  giftReveal.classList.remove('show'); void giftReveal.offsetWidth; giftReveal.classList.add('show');
+  return boxes[i];
+}
+function pickGift(i){
+  if(giftBusy || i === selectedGift) return;
+  giftBusy = true;
+  const box = applyGift(i);
+  S.gift = i; S.cleared[3] = true; save();
+  void box.offsetWidth; box.classList.add('chosen');
+  later(()=>box.classList.remove('chosen'), 850);
+  sfx.magic(); popHearts(6);
+  later(()=>{ giftBusy = false; softScroll(giftReveal, 'nearest'); }, 500);
+}
+$('#btn-stage3-repick').addEventListener('click', ()=>{
+  if(giftBusy) return;
+  sfx.tap();
+  selectedGift = -1; S.gift = -1; S.cleared[3] = false; save();
+  giftReveal.classList.remove('show');
+  $$('.gift-box', giftRow).forEach(b=>{ b.classList.remove('selected', 'dim'); b.setAttribute('aria-pressed', 'false'); });
+});
+$('#btn-stage3-next').addEventListener('click', ()=>{ if(selectedGift >= 0) advance(3); });
+
+/* ============================================================
+   المرحلة ٤ — أكملي القلب
+   كل قطعة SVG مستقل بنافذة عرض (viewBox) تطابق ربعها من القلب.
+   ============================================================ */
+const HEART_D = 'M50,88 C20,60 5,45 5,28 A12,12 0 0 1 30,25 C33,15 42,12 50,18 C58,12 67,15 70,25 A12,12 0 0 1 95,28 C95,45 80,60 50,88 Z';
+const VB_Y = 10, VB_H = 80;
+const TRAY_K = .62;
+const PIECES = [
+  { key:'tl', x:0,    y:10,   w:50.5, h:36.5, fill:'#FBD0E0', stroke:'#E8A6C2' },
+  { key:'tr', x:49.5, y:10,   w:50.5, h:36.5, fill:'#F8C8DC', stroke:'#E8A6C2' },
+  { key:'bl', x:0,    y:45.5, w:50.5, h:44.5, fill:'#F5B9CF', stroke:'#E0A0BA' },
+  { key:'br', x:49.5, y:45.5, w:50.5, h:44.5, fill:'#F3A9C6', stroke:'#D98FB0' }
+];
+const puzzleArea = $('#puzzle-area'), slotsBox = $('#puzzle-slots'), tray = $('#tray'), trayHint = $('#trayHint');
+const puzzleHintBtn = $('#puzzleHint'), heartDone = $('#heart-done');
+let pz = { pieces: [], placed: 0, done: false, selected: null, hints: 2, lastS: 0 };
+
+function geom(){ return { s: slotsBox.offsetWidth / 100, sx: slotsBox.offsetLeft, sy: slotsBox.offsetTop }; }
+function slotRect(d, g){ return { l: g.sx + d.x * g.s, t: g.sy + (d.y - VB_Y) * g.s, w: d.w * g.s, h: d.h * g.s }; }
+function setBox(el, l, t, w, h){
+  el.style.left = l + 'px'; el.style.top = t + 'px';
+  el.style.width = w + 'px'; el.style.height = h + 'px';
+}
+function layoutPuzzle(force){
+  const g = geom();
+  if(!g.s) return;
+  if(!force && Math.abs(g.s - pz.lastS) < .01) return;
+  pz.lastS = g.s;
+  const gap = 10;
+  const maxW = 50.5 * g.s * TRAY_K, maxH = 44.5 * g.s * TRAY_K;
+  const trayW = tray.offsetWidth;
+  const cols = (4 * maxW + 5 * gap <= trayW) ? 4 : 2;
+  const rows = 4 / cols;
+  tray.style.height = (rows * maxH + (rows + 1) * gap) + 'px';
+  const tl = tray.offsetLeft, tt = tray.offsetTop;
+  const cellW = (trayW - gap * (cols + 1)) / cols;
+  pz.pieces.forEach(st=>{
+    const d = st.def;
+    if(st.placed){
+      const r = slotRect(d, g); setBox(st.el, r.l, r.t, r.w, r.h);
+    } else if(!st.dragging){
+      const pw = d.w * g.s * TRAY_K, ph = d.h * g.s * TRAY_K;
+      const c = st.idx % cols, r = Math.floor(st.idx / cols);
+      setBox(st.el,
+        tl + gap + c * (cellW + gap) + (cellW - pw) / 2 + st.jx,
+        tt + gap + r * (maxH + gap) + (maxH - ph) / 2 + st.jy, pw, ph);
+    }
+  });
+}
+enter[4] = function(restoring){
+  $$('.ppiece', puzzleArea).forEach(p=>p.remove());
+  pz = { pieces: [], placed: 0, done: false, selected: null, hints: 2, lastS: 0 };
+  puzzleArea.classList.remove('complete');
+  heartDone.classList.remove('show');
+  puzzleHintBtn.style.display = '';
+  trayHint.style.display = '';
+  tray.style.height = '';
+  const order = PIECES.map(p=>({ p, k: Math.random() })).sort((a, b)=>a.k - b.k).map(x=>x.p);
+  order.forEach((d, i)=>{
+    const el = document.createElement('div');
+    el.className = 'ppiece'; el.dataset.key = d.key;
+    el.setAttribute('aria-label', 'قطعة من القلب');
+    el.innerHTML = `<svg viewBox="${d.x} ${d.y} ${d.w} ${d.h}" aria-hidden="true" focusable="false"><path d="${HEART_D}" fill="${d.fill}" stroke="${d.stroke}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+    const st = { el, def: d, idx: i, placed: false, dragging: false, jx: rand(-3, 3), jy: rand(-3, 3) };
+    pz.pieces.push(st);
+    attachPiece(st);
+    puzzleArea.appendChild(el);
+  });
+  layoutPuzzle(true);
+  if(restoring) pz.pieces.forEach(st=>placePiece(st, true));   // مكتملة سابقاً: تُركَّب فوراً
+};
+function selectPiece(st){
+  if(pz.selected === st){ st.el.classList.remove('selected'); pz.selected = null; return; }
+  pz.pieces.forEach(p=>p.el.classList.remove('selected'));
+  pz.selected = st; st.el.classList.add('selected');
+  sfx.tap(); toast('الآن المسي مكان القطعة على القلب');
+}
+function trySnap(st){
+  const g = geom(), r = slotRect(st.def, g);
+  const cx = parseFloat(st.el.style.left) + st.el.offsetWidth / 2;
+  const cy = parseFloat(st.el.style.top) + st.el.offsetHeight / 2;
+  if(Math.hypot(cx - (r.l + r.w / 2), cy - (r.t + r.h / 2)) <= Math.max(r.w, r.h) * .6){
+    placePiece(st, false); return true;
+  }
+  return false;
+}
+function placePiece(st, instant){
+  if(st.placed) return;           // لا يمكن تثبيت القطعة مرتين
+  st.placed = true; st.dragging = false;
+  if(pz.selected === st) pz.selected = null;
+  const el = st.el;
+  el.classList.remove('selected', 'dragging');
+  el.classList.add('placed');
+  if(!instant) el.classList.add('animating');
+  const r = slotRect(st.def, geom());
+  setBox(el, r.l, r.t, r.w, r.h);
+  if(!instant) later(()=>el.classList.remove('animating'), 520);
+  pz.placed++; trayHint.style.display = 'none';
+  if(!instant){ sfx.match(); popHearts(3); }
+  if(pz.placed === PIECES.length && !pz.done){   // الإكمال مرة واحدة فقط
+    pz.done = true;
+    S.cleared[4] = true; save();
+    if(instant) finishPuzzle(true); else later(()=>finishPuzzle(false), 560);
+  }
+}
+function finishPuzzle(silent){
+  puzzleArea.classList.add('complete');
+  puzzleHintBtn.style.display = 'none';
+  pz.pieces.forEach(st=>{
+    const d = st.def;
+    st.el.style.transformOrigin = ((50 - d.x) / d.w * 100) + '% ' + ((50 - d.y) / d.h * 100) + '%';
+    st.el.classList.add('beat');
+  });
+  heartDone.classList.add('show');
+  if(!silent){ sfx.win(); popHearts(12); later(()=>softScroll(heartDone, 'center'), 300); }
+}
+function attachPiece(st){
+  const el = st.el;
+  let pid = null, sx = 0, sy = 0, ol = 0, ot = 0, moved = false;
+  el.addEventListener('pointerdown', e=>{
+    if(st.placed || pz.done || pid !== null) return;
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    pid = e.pointerId; moved = false;
+    sx = e.clientX; sy = e.clientY;
+    ol = parseFloat(el.style.left); ot = parseFloat(el.style.top);
+    st.dragging = true;
+    try{ el.setPointerCapture(pid); }catch(_){}
+    el.classList.add('dragging');
+    e.preventDefault();
+  });
+  el.addEventListener('pointermove', e=>{
+    if(e.pointerId !== pid) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if(!moved && Math.hypot(dx, dy) < 6) return;
+    moved = true;
+    el.style.left = clamp(ol + dx, 0, puzzleArea.offsetWidth - el.offsetWidth) + 'px';
+    el.style.top  = clamp(ot + dy, 0, puzzleArea.offsetHeight - el.offsetHeight) + 'px';
+  });
+  function end(e, cancelled){
+    if(e.pointerId !== pid) return;
+    pid = null; st.dragging = false;
+    el.classList.remove('dragging');
+    try{ el.releasePointerCapture(e.pointerId); }catch(_){}
+    if(cancelled || st.placed) return;
+    if(moved){ if(!trySnap(st)) sfx.no(); }
+    else selectPiece(st);
+  }
+  el.addEventListener('pointerup', e=>end(e, false));
+  el.addEventListener('pointercancel', e=>end(e, true));
+}
+slotsBox.addEventListener('click', e=>{
+  const st = pz.selected;
+  if(!st || st.placed || pz.done) return;
+  const r = slotsBox.getBoundingClientRect();
+  const u = (e.clientX - r.left) / r.width * 100;
+  const v = (e.clientY - r.top) / r.height * VB_H + VB_Y;
+  const d = st.def;
+  if(u >= d.x - 2 && u <= d.x + d.w + 2 && v >= d.y - 2 && v <= d.y + d.h + 2) placePiece(st, false);
+  else toast('ليس هذا مكانها، جرّبي مكاناً آخر');
+});
+puzzleHintBtn.addEventListener('click', ()=>{
+  if(pz.done) return;
+  if(pz.hints <= 0){ toast('استخدمتِ كل التلميحات، قريباً ستكملينه!'); return; }
+  const st = pz.pieces.find(p=>!p.placed && !p.dragging);
+  if(!st){ toast('أكملي القطعة التي بين يديكِ أولاً'); return; }
+  pz.hints--;
+  sfx.tap(); toast('قطعة وجدت طريقها إلى مكانها');
+  placePiece(st, false);
+});
+if('ResizeObserver' in window){
+  new ResizeObserver(()=>{ if(currentStage === 4) layoutPuzzle(false); }).observe(puzzleArea);
+} else {
+  window.addEventListener('resize', ()=>{ if(currentStage === 4) layoutPuzzle(false); });
+}
+$('#btn-stage4-next').addEventListener('click', ()=>{ if(pz.done) advance(4); });
+
+/* ============================================================
+   المرحلة ٥ — الهدية الأخيرة والرسالة
+   ============================================================ */
+const gift3d = $('#gift3d'), tapDots = $$('#tap-count .tap-dot');
+const finalScene = $('#final-scene'), finalHead = $('#final-head'), celebration = $('#celebration'), tapHint = $('#tapHint');
+const letterFinal = $('#letterFinal');
+const TAP_MSGS = ['رائع، واصلي', 'قليلاً بعد...', 'اقتربنا!', 'لمسة أخيرة!'];
+let taps = 0, giftOpened = false, celebrated = false;
+
+enter[5] = function(){
+  taps = 0; giftOpened = false; celebrated = false;
+  gift3d.className = 'gift3d';
+  tapDots.forEach(d=>d.classList.remove('on'));
+  finalHead.style.display = '';
+  finalScene.style.display = '';
+  celebration.classList.remove('show');
+  letterFinal.classList.remove('reveal', 'shown');
+  tapHint.style.display = ''; tapHint.textContent = 'المسي الصندوق خمس مرات';
+  $('#tap-count').style.opacity = '1';
+};
+gift3d.addEventListener('animationend', e=>{ if(e.target === gift3d) gift3d.classList.remove('shake'); });
+function giftTap(){
+  if(giftOpened || currentStage !== 5) return;
+  taps++;
+  sfx.tap();
+  gift3d.classList.remove('shake'); void gift3d.offsetWidth; gift3d.classList.add('shake');
+  if(taps <= 4) gift3d.classList.add('tap' + taps);
+  tapDots.forEach((d, i)=>d.classList.toggle('on', i < taps));
+  popHearts(2);
+  if(taps < 5){ tapHint.textContent = TAP_MSGS[taps - 1]; return; }
+  giftOpened = true;                       // تسلسل الفتح يُنفَّذ مرة واحدة فقط
+  tapHint.style.display = 'none';
+  later(()=>{
+    gift3d.classList.remove('shake');
+    gift3d.classList.add('open'); sfx.magic();
+    $('#tap-count').style.opacity = '.4';
+    later(()=>revealCelebration(false), reduceMotion.matches ? 0 : 1100);
+  }, reduceMotion.matches ? 0 : 480);
+}
+function revealCelebration(silent){
+  if(celebrated) return;
+  celebrated = true;
+  finalHead.style.display = 'none';
+  finalScene.style.display = 'none';
+  celebration.classList.add('show');
+  setProgress(6);
+  S.stage = 'done'; save();
+  const n = S.stars.length;
+  $('#starNote').textContent = n === TOTAL_STARS
+    ? 'جمعتِ كل النجوم الخمس، وفتحتِ مفاجأتها ✨'
+    : 'جمعتِ ' + n + ' من أصل ' + TOTAL_STARS + ' نجوم. يمكنكِ إعادة الرحلة للعثور على الباقي.';
+  window.scrollTo(0, 0);
+  if(silent){ letterFinal.classList.add('shown'); return; }
+  // احتفال: قصاصات وقلوب على دفعات خفيفة، ثم ظهور الرسالة سطراً بعد سطر
+  sfx.win(); stageFlash(); popConfetti(30); popHearts(12);
+  for(let k = 1; k <= 3; k++) later(()=>{ popConfetti(14); popHearts(5); }, k * 1500);
+  later(()=>letterFinal.classList.add('reveal'), 1400);
+}
+gift3d.addEventListener('click', giftTap);
+gift3d.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); giftTap(); } });
+
+/* صورة البالونات: بديل مرسوم إن تعذّر تحميلها */
+(function balloons(){
+  const img = $('#balloonsImg'), fb = $('#balloonsFallback');
+  const fail = ()=>{ img.hidden = true; fb.hidden = false; };
+  img.addEventListener('error', fail);
+  if(img.complete && img.naturalWidth === 0 && img.getAttribute('src')) fail();
+})();
+
+/* ---------- إعادة الرحلة (بتأكيد صريح) ---------- */
+function doRestart(){
+  cancelAll();
+  sheetQueue = [];
+  layer.innerHTML = '';
+  wipe();
+  showScreen(0);
+  toast('تبدأ الرحلة من جديد');
+}
+$('#btn-restart').addEventListener('click', ()=>{
+  openSheet({
+    icon: '🤍', title: 'إعادة الرحلة؟',
+    lines: ['سيُمسح تقدّمكِ ونجومكِ، وتبدئين من الصفحة الأولى.'],
+    buttons: [
+      { label: 'لا، ابقي هنا', focus: true },
+      { label: 'نعم، ابدئي من جديد', ghost: true, fn: doRestart }
+    ]
+  });
+});
+
+/* ============================================================
+   البداية والاستئناف
+   ============================================================ */
+$('#btn-start').addEventListener('click', ()=>{
+  if(currentStage !== 0) return;
+  sfx.magic(); stageFlash();
+  showScreen(1, false);
+});
+
+(function init(){
+  const st = S.stage;
+  if(st === 'done'){
+    showScreen(5, false);
+    revealCelebration(true);
+    later(()=>toast('أهلاً بعودتكِ'), 600);
+  } else if(Number.isInteger(st) && st >= 1){
+    skipStarHint = true;
+    showScreen(st, !!S.cleared[st]);
+    later(()=>toast('أهلاً بعودتكِ، حفظنا لكِ مكانكِ'), 600);
+  } else {
+    showScreen(0, false);
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
